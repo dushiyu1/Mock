@@ -24,15 +24,15 @@ def init_database():
     for attempt in range(max_retries):
         try:
             with app.app_context():
-                logger.info(f"Attempt {attempt + 1}/{max_retries}: Connecting to database...")
+                logger.info(f"Attempt {attempt + 1}/{max_retries}: 数据库连接中......")
 
                 # 测试数据库连接
                 db.session.execute(text('SELECT 1'))
-                logger.info("Database connection successful")
+                logger.info("数据库连接成功")
 
                 # 创建所有表
                 db.create_all()
-                logger.info("Tables created successfully")
+                logger.info("表格创建成功")
 
                 # 添加示例数据（可选）
                 if not MockRoute.query.first():
@@ -65,9 +65,9 @@ def init_database():
                         db.session.add(route)
 
                     db.session.commit()
-                    logger.info("Sample routes added successfully")
+                    logger.info("示例添加成功")
 
-                logger.info("Database initialization completed successfully")
+                logger.info("数据库初始化完成")
                 return True
 
         except Exception as e:

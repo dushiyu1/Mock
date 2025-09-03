@@ -28,7 +28,7 @@ def setup_routes(app):
         route = MockRoute.query.filter_by(path=path, is_active=True).first()
 
         if not route:
-            return jsonify({'error': 'Route not found'}), 404
+            return jsonify({'error': '未查询到路由'}), 404
 
         # 检查请求方法是否允许
         allowed_methods = route.methods.split(',')
@@ -116,15 +116,15 @@ def setup_routes(app):
         try:
             data = request.get_json()
             if not data:
-                return jsonify({'error': 'No data provided'}), 400
+                return jsonify({'error': '参数不能为空'}), 400
 
             # 验证必要字段
             if 'path' not in data or 'response' not in data:
-                return jsonify({'error': 'Path and response fields are required'}), 400
+                return jsonify({'error': ' Path和response不能为空'}), 400
 
             # 检查路径是否已存在
             if MockRoute.query.filter_by(path=data['path']).first():
-                return jsonify({'error': 'Route with this path already exists'}), 409
+                return jsonify({'error': 'Route 已存在'}), 409
 
             # 创建新路由
             methods = data.get('methods', ['GET'])
@@ -146,11 +146,11 @@ def setup_routes(app):
             db.session.commit()
 
             app.logger.info(f"Created new route: {methods} {route.path}")
-            return jsonify({'message': 'Route created successfully', 'route': route.to_dict()}), 201
+            return jsonify({'message': '创建成功', 'route': route.to_dict()}), 201
 
         except Exception as e:
             db.session.rollback()
-            return jsonify({'error': f'Failed to create route: {str(e)}'}), 500
+            return jsonify({'error': f'创建失败: {str(e)}'}), 500
 
     # 管理API - 更新路由
     @app.route('/_manage/routes/<int:route_id>', methods=['PUT'])
@@ -187,28 +187,28 @@ def setup_routes(app):
             db.session.commit()
 
             app.logger.info(f"Updated route: {route.methods} {route.path}")
-            return jsonify({'message': 'Route updated successfully', 'route': route.to_dict()})
+            return jsonify({'message': '更新成功', 'route': route.to_dict()})
 
         except Exception as e:
             db.session.rollback()
-            return jsonify({'error': f'Failed to update route: {str(e)}'}), 500
+            return jsonify({'error': f'更新失败: {str(e)}'}), 500
 
-    # 管理API - 删除路由
-    @app.route('/_manage/routes/<int:route_id>', methods=['DELETE'])
+    # 管理API - 删除路由--软删除
+    @app.route('/_manage/routes/delete1/<int:route_id>', methods=['POST'])
     @require_api_key
     def delete_route(route_id):
         try:
             route = MockRoute.query.get_or_404(route_id)
-
-            db.session.delete(route)
+            route.is_active = False
+            # db.session.delete(route)
             db.session.commit()
 
             app.logger.info(f"Deleted route: {route.path}")
-            return jsonify({'message': 'Route deleted successfully'})
+            return jsonify({'message': '删除成功'})
 
         except Exception as e:
             db.session.rollback()
-            return jsonify({'error': f'Failed to delete route: {str(e)}'}), 500
+            return jsonify({'error': f'删除失败: {str(e)}'}), 500
 
     # 批量操作
     @app.route('/_manage/routes/batch', methods=['POST'])
