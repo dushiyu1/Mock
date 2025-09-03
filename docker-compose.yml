@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    platform: linux/amd64  # 确保使用x86架构
+    container_name: mock-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mock_server
+      MYSQL_USER: mockuser
+      MYSQL_PASSWORD: mockpassword
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  mock-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mock-server
+    ports:
+      - "15001:5000"
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=mockuser
+      - MYSQL_PASSWORD=mockpassword
+      - MYSQL_DATABASE=mock_server
+      - API_KEY=mock-server-admin
+      - FLASK_ENV=production
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
