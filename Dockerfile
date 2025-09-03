@@ -13,8 +13,9 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 复制应用代码
-COPY . .
+# 只复制后端代码
+COPY app/ app/
+COPY init_db.py run.py ./
 
 EXPOSE 5000
 

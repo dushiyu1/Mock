@@ -19,13 +19,4 @@ def create_app():
     from .routes import setup_routes
     setup_routes(app)
 
-    # 添加前端静态文件服务
-    @app.route('/')
-    def serve_frontend():
-        return send_from_directory('../frontend', 'index.html')
-
-    @app.route('/<path:path>')
-    def serve_static(path):
-        return send_from_directory('../frontend', path)
-
     return app

@@ -29,8 +29,6 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: mock-server
-    ports:
-      - "15001:5000"
     environment:
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
@@ -39,11 +37,21 @@ services:
       - MYSQL_DATABASE=mock_server
       - API_KEY=mock-server-admin
       - FLASK_ENV=production
-    volumes:
-      - ./frontend:/app/frontend  # 挂载前端文件
     depends_on:
       mysql:
         condition: service_healthy
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: mock-nginx
+    ports:
+      - "15001:80"    # 宿主机的15001端口映射到Nginx的80端口
+    volumes:
+      - ./frontend:/usr/share/nginx/html    # 挂载前端文件
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf  # 挂载Nginx配置
+    depends_on:
+      - mock-server
     restart: unless-stopped
 
 volumes:
