@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mysql:
     image: mysql:8.0
-    platform: linux/amd64  # 确保使用x86架构
+    platform: linux/amd64
     container_name: mock-mysql
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -39,6 +39,8 @@ services:
       - MYSQL_DATABASE=mock_server
       - API_KEY=mock-server-admin
       - FLASK_ENV=production
+    volumes:
+      - ./frontend:/app/frontend  # 挂载前端文件
     depends_on:
       mysql:
         condition: service_healthy

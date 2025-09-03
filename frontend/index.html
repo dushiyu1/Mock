@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Server 管理界面</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Mock Server 管理界面</h1>
+            <div class="api-key-container">
+                <input type="password" id="apiKey" placeholder="输入API密钥" value="mock-server-admin">
+                <button onclick="saveApiKey()">保存</button>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab('routes-tab')">路由管理</button>
+            <button class="tab-btn" onclick="openTab('create-tab')">创建路由</button>
+            <button class="tab-btn" onclick="openTab('health-tab')">系统状态</button>
+        </div>
+
+        <div id="routes-tab" class="tab-content active">
+            <div class="filters">
+                <label>
+                    <input type="checkbox" id="activeOnly" onchange="loadRoutes()"> 只显示激活路由
+                </label>
+                <button onclick="loadRoutes()">刷新</button>
+            </div>
+            <div id="routes-list" class="routes-list"></div>
+        </div>
+
+        <div id="create-tab" class="tab-content">
+            <form id="create-form" class="route-form">
+                <div class="form-group">
+                    <label>路径:</label>
+                    <input type="text" name="path" required placeholder="/api/example">
+                </div>
+
+                <div class="form-group">
+                    <label>HTTP方法:</label>
+                    <select name="methods" multiple required>
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                        <option value="PATCH">PATCH</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>状态码:</label>
+                    <input type="number" name="status_code" value="200" required>
+                </div>
+
+                <div class="form-group">
+                    <label>响应延迟(秒):</label>
+                    <input type="number" name="delay" value="0" step="0.1">
+                </div>
+
+                <div class="form-group">
+                    <label>描述:</label>
+                    <input type="text" name="description" placeholder="路由描述">
+                </div>
+
+                <div class="form-group">
+                    <label>响应头(JSON):</label>
+                    <textarea name="headers" placeholder='{"Content-Type": "application/json"}'></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>响应体(JSON):</label>
+                    <textarea name="response" required placeholder='{"message": "Hello World"}' rows="6"></textarea>
+                </div>
+
+                <button type="submit">创建路由</button>
+            </form>
+        </div>
+
+        <div id="health-tab" class="tab-content">
+            <div id="health-status" class="health-status">
+                <h3>系统状态</h3>
+                <div id="health-info"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑模态框 -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>编辑路由</h3>
+            <form id="edit-form"></form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

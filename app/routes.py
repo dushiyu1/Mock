@@ -194,7 +194,7 @@ def setup_routes(app):
             return jsonify({'error': f'更新失败: {str(e)}'}), 500
 
     # 管理API - 删除路由--软删除
-    @app.route('/_manage/routes/delete/<int:route_id>', methods=['POST'])
+    @app.route('/_manage/routes/delete1/<int:route_id>', methods=['POST'])
     @require_api_key
     def delete_route(route_id):
         try:
