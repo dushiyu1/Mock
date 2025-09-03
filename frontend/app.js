@@ -1,6 +1,169 @@
 const API_BASE = 'http://localhost:15001/_manage';
 let currentApiKey = 'mock-server-admin';
 
+// 分页相关变量
+let currentPage = 1;
+let itemsPerPage = 10;
+let totalRoutes = 0;
+let totalPages = 0;
+let allRoutes = [];
+let filteredRoutes = [];
+let searchTerm = '';
+
+// 防抖函数
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// 搜索功能
+const debouncedSearch = debounce(function() {
+    searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    currentPage = 1;
+    loadRoutes();
+}, 300);
+
+// 过滤路由
+function filterAndDisplayRoutes() {
+    currentPage = 1;
+    loadRoutes();
+}
+
+// 显示当前页的路由
+function displayCurrentPageRoutes() {
+    const routesList = document.getElementById('routes-list');
+    if (!routesList) return;
+
+    routesList.innerHTML = '';
+
+    if (allRoutes.length === 0) {
+        routesList.innerHTML = '<div class="loading">暂无路由</div>';
+        return;
+    }
+
+    allRoutes.forEach(route => {
+        const routeCard = createRouteCard(route);
+        routesList.appendChild(routeCard);
+    });
+
+    // 更新统计信息
+    const totalRoutesEl = document.getElementById('total-routes');
+    const showingRoutesEl = document.getElementById('showing-routes');
+
+    if (totalRoutesEl) totalRoutesEl.textContent = totalRoutes;
+    if (showingRoutesEl) showingRoutesEl.textContent = allRoutes.length;
+}
+
+// 更新分页控件
+function updatePagination() {
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+    const pageNumbers = document.getElementById('page-numbers');
+    const totalPagesSpan = document.getElementById('total-pages');
+    const pageInput = document.getElementById('page-input');
+
+    // 更新按钮状态
+    if (prevBtn) prevBtn.disabled = currentPage <= 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+    // 更新总页数
+    if (totalPagesSpan) totalPagesSpan.textContent = totalPages;
+    if (pageInput) {
+        pageInput.value = currentPage;
+        pageInput.max = totalPages;
+    }
+
+    // 生成页码按钮
+    if (pageNumbers) {
+        pageNumbers.innerHTML = '';
+
+        if (totalPages <= 1) {
+            return;
+        }
+
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+
+        // 添加第一页
+        if (startPage > 1) {
+            addPageNumber(1);
+            if (startPage > 2) {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'page-ellipsis';
+                ellipsis.textContent = '...';
+                pageNumbers.appendChild(ellipsis);
+            }
+        }
+
+        // 添加中间页码
+        for (let i = startPage; i <= endPage; i++) {
+            addPageNumber(i);
+        }
+
+        // 添加最后一页
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'page-ellipsis';
+                ellipsis.textContent = '...';
+                pageNumbers.appendChild(ellipsis);
+            }
+            addPageNumber(totalPages);
+        }
+    }
+}
+
+function addPageNumber(page) {
+    const pageNumbers = document.getElementById('page-numbers');
+    if (!pageNumbers) return;
+
+    const pageBtn = document.createElement('span');
+    pageBtn.className = `page-number ${page === currentPage ? 'active' : ''}`;
+    pageBtn.textContent = page;
+    pageBtn.onclick = () => changePage(page);
+    pageNumbers.appendChild(pageBtn);
+}
+
+// 切换页码
+function changePage(page) {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    currentPage = page;
+    loadRoutes();
+}
+
+// 跳转到指定页码
+function goToPage() {
+    const pageInput = document.getElementById('page-input');
+    let page = parseInt(pageInput.value);
+
+    if (isNaN(page) || page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+
+    changePage(page);
+}
+
+// 修改每页显示数量
+function changeItemsPerPage() {
+    const select = document.getElementById('itemsPerPage');
+    if (!select) return;
+
+    itemsPerPage = parseInt(select.value);
+    currentPage = 1;
+    loadRoutes();
+}
+
 // 保存API密钥
 function saveApiKey() {
     currentApiKey = document.getElementById('apiKey').value;
@@ -54,30 +217,44 @@ async function apiRequest(url, options = {}) {
     }
 }
 
-// 加载路由列表
+// 加载路由数据
 async function loadRoutes() {
-    const activeOnly = document.getElementById('activeOnly').checked;
+    console.log('开始加载路由数据...');
+    const loadingElement = document.getElementById('loading');
     const routesList = document.getElementById('routes-list');
 
-    routesList.innerHTML = '<div class="loading">加载中...</div>';
+    if (loadingElement) loadingElement.style.display = 'block';
+    if (routesList) routesList.innerHTML = '';
 
     try {
-        const url = activeOnly ? '/routes?active_only=true' : '/routes';
-        const data = await apiRequest(url);
+        const activeOnly = document.getElementById('activeOnly')?.checked || false;
+        const itemsPerPageSelect = document.getElementById('itemsPerPage');
+        const itemsPerPage = itemsPerPageSelect ? parseInt(itemsPerPageSelect.value) : 10;
 
-        routesList.innerHTML = '';
-
-        if (data.routes.length === 0) {
-            routesList.innerHTML = '<div class="loading">暂无路由</div>';
-            return;
+        // 构建URL，包含分页参数
+        let url = `/routes?page=${currentPage}&per_page=${itemsPerPage}`;
+        if (activeOnly) {
+            url += '&active_only=true';
         }
 
-        data.routes.forEach(route => {
-            const routeCard = createRouteCard(route);
-            routesList.appendChild(routeCard);
-        });
+        const data = await apiRequest(url);
+
+        // 更新分页信息
+        totalRoutes = data.total || 0;
+        totalPages = data.pages || 1;
+        currentPage = data.current_page || 1;
+
+        allRoutes = data.routes || [];
+        console.log('加载的路由数据:', allRoutes.length, '条，总共:', totalRoutes, '条');
+
+        displayCurrentPageRoutes();
+        updatePagination();
+
     } catch (error) {
-        routesList.innerHTML = '<div class="loading">加载失败</div>';
+        console.error('加载路由失败:', error);
+        if (routesList) routesList.innerHTML = '<div class="loading">加载失败</div>';
+    } finally {
+        if (loadingElement) loadingElement.style.display = 'none';
     }
 }
 
@@ -165,7 +342,7 @@ function openEditModal(route) {
         <div class="form-group">
             <label>HTTP方法:</label>
             <select name="methods" multiple required>
-                ${['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].map(method =>
+                ${['GET', 'POST'].map(method =>
                     `<option value="${method}" ${route.methods.includes(method) ? 'selected' : ''}>${method}</option>`
                 ).join('')}
             </select>
@@ -229,7 +406,7 @@ async function updateRoute(event) {
 
     try {
         await apiRequest(`/routes/${routeId}`, {
-            method: 'PUT',
+            method: 'POST',
             body: JSON.stringify(data)
         });
 
@@ -245,7 +422,7 @@ async function updateRoute(event) {
 async function toggleRoute(routeId, isActive) {
     try {
         await apiRequest(`/routes/${routeId}`, {
-            method: 'PUT',
+            method: 'POST',
             body: JSON.stringify({ is_active: isActive })
         });
 
@@ -261,7 +438,7 @@ async function deleteRoute(routeId) {
     if (!confirm('确定要删除这个路由吗？')) return;
 
     try {
-        await apiRequest(`/routes/delete1/${routeId}`, {
+        await apiRequest(`/routes/${routeId}`, {
             method: 'POST'
         });
 
@@ -320,8 +497,20 @@ document.addEventListener('DOMContentLoaded', function() {
     loadApiKey();
     loadRoutes();
 
+    // 设置默认的每页显示数量
+    const itemsPerPageSelect = document.getElementById('itemsPerPage');
+    if (itemsPerPageSelect) {
+        itemsPerPageSelect.value = itemsPerPage;
+    }
+
+    // 初始化分页控件
+    updatePagination();
+
     // 绑定表单提交事件
-    document.getElementById('create-form').onsubmit = createRoute;
+    const createForm = document.getElementById('create-form');
+    if (createForm) {
+        createForm.onsubmit = createRoute;
+    }
 
     // 点击模态框外部关闭
     window.onclick = function(event) {
@@ -330,4 +519,6 @@ document.addEventListener('DOMContentLoaded', function() {
             closeModal();
         }
     };
+
+    console.log('前端界面初始化完成');
 });

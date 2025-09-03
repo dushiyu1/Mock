@@ -24,12 +24,43 @@
 
         <div id="routes-tab" class="tab-content active">
             <div class="filters">
-                <label>
-                    <input type="checkbox" id="activeOnly" onchange="loadRoutes()"> 只显示激活路由
-                </label>
-                <button onclick="loadRoutes()">刷新</button>
+                <div class="filter-group">
+                    <label>
+                        <input type="checkbox" id="activeOnly" onchange="loadRoutes()"> 只显示激活路由
+                    </label>
+                    <button onclick="loadRoutes()" class="btn-refresh">🔄 刷新</button>
+                </div>
+                <div class="search-group">
+                    <input type="text" id="searchInput" placeholder="搜索路径或描述..." oninput="debouncedSearch()">
+                    <select id="itemsPerPage" onchange="changeItemsPerPage()">
+                        <option value="5">5条/页</option>
+                        <option value="10" selected>10条/页</option>
+                        <option value="20">20条/页</option>
+                        <option value="50">50条/页</option>
+                    </select>
+                </div>
             </div>
+
+            <div class="routes-stats">
+                共 <span id="total-routes">0</span> 条路由，显示 <span id="showing-routes">0</span> 条
+            </div>
+
             <div id="routes-list" class="routes-list"></div>
+
+            <!-- 分页控件 -->
+            <div class="pagination">
+                <button id="prev-page" class="pagination-btn" onclick="changePage(currentPage - 1)" disabled>上一页</button>
+
+                <div class="page-numbers" id="page-numbers"></div>
+
+                <button id="next-page" class="pagination-btn" onclick="changePage(currentPage + 1)" disabled>下一页</button>
+
+                <span class="page-info">
+                    第 <input type="number" id="page-input" min="1" value="1" onchange="goToPage()"> 页 / 共 <span id="total-pages">0</span> 页
+                </span>
+            </div>
+
+            <div class="loading" id="loading">加载中...</div>
         </div>
 
         <div id="create-tab" class="tab-content">
@@ -88,7 +119,7 @@
     </div>
 
     <!-- 编辑模态框 -->
-    <div id="edit-modal" class="modal">
+   <div id="edit-modal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
             <h3>编辑路由</h3>

@@ -48,57 +48,57 @@ def process_dynamic_response(response_template, request):
     return response_template
 
 
-def generate_payment_response(request):
-    """生成支付响应"""
-    # 获取请求参数
-    data = request.get_json() or {}
-    payment_id = data.get('id')
-    merchant_id = data.get('merchant_id')
-    order_no = data.get('order_no')
-    amount = data.get('amount')
-
-    # 验证必要参数
-    if not all([payment_id, merchant_id, order_no, amount]):
-        return {
-            "code": 400,
-            "message": "缺少必要参数",
-            "data": None
-        }, 400
-
-    # 模拟支付状态（80%成功，20%失败）
-    is_success = random.random() > 0.2
-
-    if is_success:
-        response_data = {
-            "code": 200,
-            "message": "支付成功",
-            "data": {
-                "id": payment_id,
-                "merchant_id": merchant_id,
-                "order_no": order_no,
-                "amount": amount,
-                "pay_status": "SUCCESS",
-                "transaction_id": f"TRX{random.randint(10000000, 99999999)}",
-                "pay_time": datetime.now().isoformat(),
-                "settlement_time": datetime.now().isoformat()
-            }
-        }
-    else:
-        response_data = {
-            "code": 500,
-            "message": "支付失败",
-            "data": {
-                "id": payment_id,
-                "merchant_id": merchant_id,
-                "order_no": order_no,
-                "amount": amount,
-                "pay_status": "FAILED",
-                "error_code": "BALANCE_INSUFFICIENT",
-                "error_message": "余额不足"
-            }
-        }
-
-    return response_data, 200
+# def generate_payment_response(request):
+#     """生成支付响应"""
+#     # 获取请求参数
+#     data = request.get_json() or {}
+#     payment_id = data.get('id')
+#     merchant_id = data.get('merchant_id')
+#     order_no = data.get('order_no')
+#     amount = data.get('amount')
+#
+#     # 验证必要参数
+#     if not all([payment_id, merchant_id, order_no, amount]):
+#         return {
+#             "code": 400,
+#             "message": "缺少必要参数",
+#             "data": None
+#         }, 400
+#
+#     # 模拟支付状态（80%成功，20%失败）
+#     is_success = random.random() > 0.2
+#
+#     if is_success:
+#         response_data = {
+#             "code": 200,
+#             "message": "支付成功",
+#             "data": {
+#                 "id": payment_id,
+#                 "merchant_id": merchant_id,
+#                 "order_no": order_no,
+#                 "amount": amount,
+#                 "pay_status": "SUCCESS",
+#                 "transaction_id": f"TRX{random.randint(10000000, 99999999)}",
+#                 "pay_time": datetime.now().isoformat(),
+#                 "settlement_time": datetime.now().isoformat()
+#             }
+#         }
+#     else:
+#         response_data = {
+#             "code": 500,
+#             "message": "支付失败",
+#             "data": {
+#                 "id": payment_id,
+#                 "merchant_id": merchant_id,
+#                 "order_no": order_no,
+#                 "amount": amount,
+#                 "pay_status": "FAILED",
+#                 "error_code": "BALANCE_INSUFFICIENT",
+#                 "error_message": "余额不足"
+#             }
+#         }
+#
+#     return response_data, 200
 
 
 def random_choice(choices):

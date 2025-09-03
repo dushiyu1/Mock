@@ -7,7 +7,8 @@ import time
 import json
 
 # 导入工具函数
-from .utils import process_dynamic_response, generate_payment_response
+from .utils import process_dynamic_response
+# generate_payment_response)
 
 
 def require_api_key(f):
@@ -52,11 +53,11 @@ def setup_routes(app):
             time.sleep(route.delay)
 
         # 处理动态响应
-        if isinstance(route.response, dict) and route.response.get('__handler') == 'payment_handler':
-            response_data, status_code = generate_payment_response(request)
-        else:
-            response_data = process_dynamic_response(route.response, request)
-            status_code = route.status_code
+        # if isinstance(route.response, dict) and route.response.get('__handler') == 'payment_handler':
+        #     response_data, status_code = generate_payment_response(request)
+        # else:
+        response_data = process_dynamic_response(route.response, request)
+        status_code = route.status_code
 
         # 创建响应
         response = make_response(jsonify(response_data), status_code)
@@ -69,8 +70,8 @@ def setup_routes(app):
         return response
 
     # 注册通配路由 - 处理所有非管理API的请求
-    @app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
-    @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
+    @app.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
+    @app.route('/<path:path>', methods=['GET', 'POST'])
     def catch_all_handler(path):
         # 排除管理API
         if path.startswith('_manage'):
@@ -86,6 +87,14 @@ def setup_routes(app):
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
         query = MockRoute.query
+
+        # 搜索过滤
+        search = request.args.get('search', '')
+        if search:
+            query = query.filter(
+                (MockRoute.path.ilike(f'%{search}%')) |
+                (MockRoute.description.ilike(f'%{search}%'))
+            )
 
         # 过滤条件
         if request.args.get('active_only'):
@@ -153,7 +162,7 @@ def setup_routes(app):
             return jsonify({'error': f'创建失败: {str(e)}'}), 500
 
     # 管理API - 更新路由
-    @app.route('/_manage/routes/<int:route_id>', methods=['PUT'])
+    @app.route('/_manage/routes/<int:route_id>', methods=['POST'])
     @require_api_key
     def update_route(route_id):
         try:

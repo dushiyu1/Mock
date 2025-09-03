@@ -225,6 +225,167 @@ button[type="submit"] {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* 新增分页相关样式 */
+.filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.filter-group, .search-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-group input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 200px;
+}
+
+.search-group select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.btn-refresh {
+    padding: 8px 12px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.routes-stats {
+    margin-bottom: 15px;
+    color: #666;
+    font-size: 14px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    padding: 8px 16px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    min-width: 80px;
+}
+
+.pagination-btn:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 5px;
+}
+
+.page-number {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    min-width: 40px;
+    text-align: center;
+}
+
+.page-number.active {
+    background-color: #3498db;
+    color: white;
+    border-color: #3498db;
+}
+
+.page-number:hover:not(.active) {
+    background-color: #f8f9fa;
+}
+
+.page-info {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 15px;
+}
+
+#page-input {
+    width: 60px;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-group, .search-group {
+        justify-content: center;
+    }
+
+    .search-group input {
+        width: 100%;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .page-info {
+        margin-left: 0;
+    }
+}
+
+/* 路由卡片样式优化 */
+.route-card {
+    margin-bottom: 15px;
+    transition: transform 0.2s ease;
+}
+
+.route-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.route-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.route-actions .btn {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
 .modal {
     display: none;
     position: fixed;
